@@ -13,11 +13,22 @@ from supabase import create_client, Client
 # Conexión a Supabase
 # ─────────────────────────────────────────────────────────────
 
+def _get_config(nombre: str) -> str:
+    """Lee primero variables de entorno (Railway) y luego st.secrets (local/Streamlit Cloud)."""
+    valor = os.environ.get(nombre)
+    if valor:
+        return valor
+    try:
+        return st.secrets.get(nombre, "")
+    except Exception:
+        # Sin .streamlit/secrets.toml (p. ej. en Railway) st.secrets lanza excepción
+        return ""
+
 def _get_supabase_url() -> str:
-    return os.environ.get("SUPABASE_URL") or st.secrets.get("SUPABASE_URL", "")
+    return _get_config("SUPABASE_URL")
 
 def _get_supabase_key() -> str:
-    return os.environ.get("SUPABASE_KEY") or st.secrets.get("SUPABASE_KEY", "")
+    return _get_config("SUPABASE_KEY")
 
 @st.cache_resource
 def get_supabase_client() -> Client:
